@@ -128,4 +128,10 @@ def generate_report() -> str:
     return "\n".join(report)
 
 def semantic_search(query: str) -> str:
-    return retrieve_products(query, top_k=3)
+    try:
+        result = retrieve_products(query, top_k=3)
+        if not result or not isinstance(result, str):
+            return "No products found for that query."
+        return result
+    except Exception as e:
+        return f"Search error: {str(e)}"
