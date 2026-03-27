@@ -1,0 +1,20 @@
+# environment
+venv/
+.venv/
+.env
+
+# streamlit secrets
+.streamlit/secrets.toml
+
+# database files
+data/inventory.db
+data/chroma_db/
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# os files
+.DS_Store
+Thumbs.db

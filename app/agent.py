@@ -1,0 +1,101 @@
+import os
+from dotenv import load_dotenv
+from langchain_groq import ChatGroq
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.tools import tool
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.memory import ConversationBufferMemory
+from prompts import SYSTEM_PROMPT
+from tools import check_stock, update_inventory, generate_report, semantic_search
+load_dotenv()
+
+
+
+load_dotenv()
+
+try:
+    import streamlit as st
+    groq_api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+except:
+    groq_api_key = os.getenv("GROQ_API_KEY")
+
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    api_key=groq_api_key,
+    temperature=0,
+)
+
+@tool
+def check_stock_tool(product_name: str) -> str:
+    """Check the current stock level of a product by name."""
+    return check_stock(product_name)
+
+@tool
+def update_inventory_tool(product_name: str, quantity_change: int) -> str:
+    """Update inventory for a product. Use positive numbers to add stock, negative to remove."""
+    return update_inventory(product_name, quantity_change)
+
+@tool
+def generate_report_tool(query: str = "full") -> str:
+    """Generate a full inventory status report including low stock alerts. Pass any string to trigger it."""
+    return generate_report()
+
+@tool
+def semantic_search_tool(query: str) -> str:
+    """Search for products using natural language. Use this for descriptive queries."""
+    return semantic_search(query)
+
+tools = [
+    check_stock_tool,
+    update_inventory_tool,
+    generate_report_tool,
+    semantic_search_tool,
+]
+
+# llm = ChatGroq(
+#     model="llama-3.3-70b-versatile",
+#     api_key=os.getenv("GROQ_API_KEY"),
+#     temperature=0,
+# )
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", SYSTEM_PROMPT),
+    MessagesPlaceholder(variable_name="chat_history"),
+    ("human", "{input}"),
+    MessagesPlaceholder(variable_name="agent_scratchpad"),
+])
+
+memory = ConversationBufferMemory(
+    memory_key="chat_history",
+    return_messages=True
+)
+
+agent = create_tool_calling_agent(llm, tools, prompt)
+
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    memory=memory,
+    verbose=True,
+    handle_parsing_errors=True,
+)
+
+def run_agent(user_input: str) -> str:
+    try:
+        response = agent_executor.invoke({"input": user_input})
+        return response["output"]
+    except TypeError as e:
+        if "NoneType" in str(e):
+            return generate_report()
+        return f"Error: {str(e)}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+if __name__ == "__main__":
+    print("Inventory Agent ready. Type 'exit' to quit.\n")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == "exit":
+            break
+        response = run_agent(user_input)
+        print(f"\nAgent: {response}\n")

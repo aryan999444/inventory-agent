@@ -1,0 +1,5 @@
+{"prompt": "How many safety helmets do we have?", "completion": "Using check_stock tool for 'safety helmet'. Result: 200 units in stock, status OK."}
+{"prompt": "Do we have any 220V compatible equipment?", "completion": "Using semantic_search for '220V compatible equipment'. Found: Heavy Duty Power Supply 220V (45 units), Industrial Motor 5HP (8 units), Industrial Fan 36inch (12 units)."}
+{"prompt": "Generate a full inventory report", "completion": "Using generate_report tool. Total: 15 products, Value: $X, Low stock alerts: Conveyor Belt, Forklift Battery, Industrial Motor."}
+{"prompt": "Add 100 units of pallet wrap", "completion": "Using update_inventory tool: product='pallet wrap', quantity_change=+100. Previous: 90, New: 190 units. Status: OK."}
+{"prompt": "What items need to be reordered?", "completion": "Using generate_report tool to check reorder levels. Items below reorder level: Conveyor Belt (3 units, reorder at 2), Forklift Battery (6 units, reorder at 3), Industrial Motor (8 units, reorder at 5)."}
