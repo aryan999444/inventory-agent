@@ -83,7 +83,8 @@ def generate_report() -> str:
     total_products = cursor.fetchone()[0]
 
     cursor.execute("SELECT SUM(quantity * price) FROM products")
-    total_value = cursor.fetchone()[0]
+    result = cursor.fetchone()[0]
+    total_value = result if result is not None else 0
 
     cursor.execute("""
         SELECT name, quantity, reorder_level 
@@ -104,17 +105,22 @@ def generate_report() -> str:
     report = [
         "===== INVENTORY REPORT =====",
         f"Total Products: {total_products}",
-        f"Total Inventory Value: ${total_value:,.2f}",
+        f"Total Inventory Value: ${float(total_value):,.2f}",
         "",
         "--- Stock by Category ---",
     ]
-    for cat, qty in by_category:
+    for row in by_category:
+        cat = row[0]
+        qty = row[1]
         report.append(f"  {cat}: {qty} units")
-    
+
     report.append("")
-    if low_stock:
+    if low_stock and len(low_stock) > 0:
         report.append(f"--- Low Stock Alerts ({len(low_stock)} items) ---")
-        for name, qty, reorder in low_stock:
+        for row in low_stock:
+            name = row[0]
+            qty = row[1]
+            reorder = row[2]
             report.append(f"  {name}: {qty} units (reorder at {reorder})")
     else:
         report.append("--- No Low Stock Alerts ---")
