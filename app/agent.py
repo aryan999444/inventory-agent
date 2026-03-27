@@ -11,13 +11,6 @@ from tools import check_stock, update_inventory, generate_report, semantic_searc
 load_dotenv()
 
 def get_api_key():
-    try:
-        import streamlit as st
-        key = st.secrets.get("GROQ_API_KEY", None)
-        if key:
-            return key
-    except:
-        pass
     return os.getenv("GROQ_API_KEY")
 
 @tool

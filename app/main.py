@@ -24,17 +24,7 @@ def setup():
 
 setup()
 
-try:
-    import importlib.util
-    import pathlib
-    agent_path = pathlib.Path(__file__).parent / "agent.py"
-    spec = importlib.util.spec_from_file_location("agent_module", agent_path)
-    agent_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(agent_module)
-    run_agent = agent_module.run_agent
-except Exception as e:
-    st.error(f"Failed to load agent: {e}")
-    st.stop()
+from agent import run_agent
 
 st.set_page_config(
     page_title="Inventory Management Agent",
