@@ -43,20 +43,20 @@ Database  Transformers
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/inventory-agent
+git clone https://github.com/aryan999444/inventory-agent.git
 cd inventory-agent
 ```
 
 ### 2. Create virtual environment
 ```bash
-python -m venv venv
-venv\Scripts\activate  # Windows
+uv python -m venv venv
+.venv\Scripts\activate  # Windows
 source venv/bin/activate  # Mac/Linux
 ```
 
 ### 3. Install dependencies
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 ### 4. Set up environment variables
@@ -67,13 +67,13 @@ cp .env.example .env
 
 ### 5. Initialize the database and vector store
 ```bash
-python data/seed.py
-python data/ingest.py
+uv python data/seed.py
+uv python data/ingest.py
 ```
 
 ### 6. Run the app
 ```bash
-streamlit run app/main.py
+uv streamlit run app/main.py
 ```
 
 ### 7. Run with Docker
