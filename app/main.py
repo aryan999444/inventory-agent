@@ -3,10 +3,27 @@ import sys
 import os
 import sqlite3
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from setup import setup
+sys.path.append(ROOT_DIR)
+sys.path.append(APP_DIR)
+
+os.chdir(ROOT_DIR)
+
+def setup():
+    os.makedirs("data", exist_ok=True)
+    
+    if not os.path.exists("data/inventory.db"):
+        from data.seed import seed_products
+        seed_products()
+    
+    if not os.path.exists("data/chroma_db"):
+        from data.ingest import ingest_products
+        ingest_products()
+
 setup()
+
 from agent import run_agent
 
 st.set_page_config(
