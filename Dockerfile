@@ -9,7 +9,7 @@ RUN uv pip install --system -r requirements.txt
 
 COPY . .
 
-RUN python data/seed.py && python data/ingest.py
+RUN uv run data/seed.py && uv run data/ingest.py
 
 EXPOSE 8501
 
