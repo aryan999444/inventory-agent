@@ -7,23 +7,18 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferMemory
 from prompts import SYSTEM_PROMPT
 from tools import check_stock, update_inventory, generate_report, semantic_search
-load_dotenv()
-
-
 
 load_dotenv()
 
-try:
-    import streamlit as st
-    groq_api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
-except:
-    groq_api_key = os.getenv("GROQ_API_KEY")
-
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    api_key=groq_api_key,
-    temperature=0,
-)
+def get_api_key():
+    try:
+        import streamlit as st
+        key = st.secrets.get("GROQ_API_KEY", None)
+        if key:
+            return key
+    except:
+        pass
+    return os.getenv("GROQ_API_KEY")
 
 @tool
 def check_stock_tool(product_name: str) -> str:
@@ -52,12 +47,6 @@ tools = [
     semantic_search_tool,
 ]
 
-# llm = ChatGroq(
-#     model="llama-3.3-70b-versatile",
-#     api_key=os.getenv("GROQ_API_KEY"),
-#     temperature=0,
-# )
-
 prompt = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_PROMPT),
     MessagesPlaceholder(variable_name="chat_history"),
@@ -70,25 +59,44 @@ memory = ConversationBufferMemory(
     return_messages=True
 )
 
-agent = create_tool_calling_agent(llm, tools, prompt)
+_agent_executor = None
 
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    memory=memory,
-    verbose=True,
-    handle_parsing_errors=True,
-)
+def get_agent_executor():
+    global _agent_executor
+    if _agent_executor is None:
+        api_key = get_api_key()
+        llm = ChatGroq(
+            model="llama-3.1-8b-instant",
+            api_key=api_key,
+            temperature=0,
+        )
+        agent = create_tool_calling_agent(llm, tools, prompt)
+        _agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            memory=memory,
+            verbose=True,
+            handle_parsing_errors=True,
+            max_iterations=5,
+            max_execution_time=30,
+        )
+    return _agent_executor
 
 def run_agent(user_input: str) -> str:
     try:
-        response = agent_executor.invoke({"input": user_input})
-        return response["output"]
+        executor = get_agent_executor()
+        response = executor.invoke({"input": user_input})
+        output = response.get("output", "")
+        if not output or "Agent stopped" in output:
+            return semantic_search(user_input)
+        return output
     except TypeError as e:
         if "NoneType" in str(e):
             return generate_report()
         return f"Error: {str(e)}"
     except Exception as e:
+        if "Agent stopped" in str(e):
+            return semantic_search(user_input)
         return f"Error: {str(e)}"
 
 if __name__ == "__main__":

@@ -24,14 +24,17 @@ def setup():
 
 setup()
 
-import importlib.util
-import pathlib
-
-agent_path = pathlib.Path(__file__).parent / "agent.py"
-spec = importlib.util.spec_from_file_location("agent_module", agent_path)
-agent_module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(agent_module)
-run_agent = agent_module.run_agent
+try:
+    import importlib.util
+    import pathlib
+    agent_path = pathlib.Path(__file__).parent / "agent.py"
+    spec = importlib.util.spec_from_file_location("agent_module", agent_path)
+    agent_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(agent_module)
+    run_agent = agent_module.run_agent
+except Exception as e:
+    st.error(f"Failed to load agent: {e}")
+    st.stop()
 
 st.set_page_config(
     page_title="Inventory Management Agent",
@@ -111,11 +114,18 @@ def get_db_stats():
     try:
         conn = sqlite3.connect("data/inventory.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM products")
+        cursor.execute("SELECT COUNT(DISTINCT name) FROM products")
         total = cursor.fetchone()[0]
-        cursor.execute("SELECT SUM(quantity * price) FROM products")
+        cursor.execute("""
+            SELECT SUM(quantity * price) FROM products
+            WHERE id IN (SELECT MAX(id) FROM products GROUP BY name)
+        """)
         value = cursor.fetchone()[0] or 0
-        cursor.execute("SELECT COUNT(*) FROM products WHERE quantity <= reorder_level")
+        cursor.execute("""
+            SELECT COUNT(*) FROM products 
+            WHERE quantity <= reorder_level
+            AND id IN (SELECT MAX(id) FROM products GROUP BY name)
+        """)
         low = cursor.fetchone()[0]
         cursor.execute("SELECT COUNT(DISTINCT category) FROM products")
         cats = cursor.fetchone()[0]
@@ -123,6 +133,7 @@ def get_db_stats():
         return total, value, low, cats
     except:
         return 0, 0, 0, 0
+    
 
 total, value, low, cats = get_db_stats()
 
