@@ -9,7 +9,8 @@ RUN uv pip install --system -r requirements.txt
 
 COPY . .
 
-RUN uv run data/seed.py && uv run data/ingest.py
+RUN python -c "from data.seed import seed_products; seed_products()"
+RUN python -c "from data.ingest import ingest_products; ingest_products()"
 
 EXPOSE 8501
 
