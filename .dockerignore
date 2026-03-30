@@ -1,0 +1,9 @@
+.venv/
+venv/
+data/chroma_db/
+data/inventory.db
+__pycache__/
+*.pyc
+.env
+.git/
+.gitignore

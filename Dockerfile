@@ -4,7 +4,10 @@ WORKDIR /app
 
 RUN pip install uv
 
+RUN pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+
 COPY requirements.txt .
+RUN uv pip install --system -r requirements.txt --no-deps sentence-transformers==2.7.0
 RUN uv pip install --system -r requirements.txt
 
 COPY . .
@@ -14,4 +17,6 @@ RUN python -c "from data.ingest import ingest_products; ingest_products()"
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app/main.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app/main.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0"]
