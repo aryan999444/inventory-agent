@@ -4,10 +4,10 @@ WORKDIR /app
 
 RUN pip install uv
 
-RUN pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
-
 COPY requirements.txt .
-RUN uv pip install --system -r requirements.txt --no-deps sentence-transformers==2.7.0
+
+RUN uv pip install --system torch --index-url https://download.pytorch.org/whl/cpu
+
 RUN uv pip install --system -r requirements.txt
 
 COPY . .
